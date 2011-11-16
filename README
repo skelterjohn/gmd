@@ -2,6 +2,6 @@ gomacdraw
 
 This is not goinstallable.
 
-in gmd/framework there is gomacdraw.pkg, and installer for the framework
+in gmd/framework there is gomacdraw.pkg, an installer for the framework
 
-build with gb (http://go-gb.googlecode.com) or write a standard makefile
+build with gb (http://go-gb.googlecode.com) or the makefile

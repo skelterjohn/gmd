@@ -21,6 +21,9 @@ int initMacDraw() {
     psn.lowLongOfPSN = kCurrentProcess;
     TransformProcessType(&psn, kProcessTransformToForegroundApplication);
     
+    NSApplicationLoad();
+    [NSApplication sharedApplication];
+    
     fw = [NSBundle bundleWithIdentifier:@"John-Asmuth.gomacdraw"];
     if (fw == Nil) {
         [pool release];
@@ -28,13 +31,18 @@ int initMacDraw() {
     }
     
     [fw retain];
-
-    gomenu = [[GoMenu alloc] retain];
-    
-    NSDictionary* md = [NSDictionary dictionaryWithObject:gomenu forKey:NSNibOwner];
-    [fw loadNibFile:@"MainMenu" externalNameTable:md withZone:nil];
     
     [NSApp activateIgnoringOtherApps:YES];
+    
+    gomenu = [[GoMenu alloc] retain];
+    
+    if (true) {
+        //[gomenu loadNoNib];
+    } else {
+        NSDictionary* md = [[NSDictionary dictionaryWithObject:gomenu forKey:NSNibOwner] autorelease];
+        [fw loadNibFile:@"MainMenu" externalNameTable:md withZone:nil];
+    }
+    
     
     [pool release];
     
@@ -42,6 +50,7 @@ int initMacDraw() {
 }
 
 void releaseMacDraw() {
+    [gomenu release];
     [fw release];
 }
 
@@ -55,7 +64,7 @@ void NSAppStop() {
 
 void setAppName(char* name) {
     NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-    [gomenu setAppName:[NSString stringWithCString:name encoding:NSASCIIStringEncoding]];
+    //[gomenu setAppName:[NSString stringWithCString:name encoding:NSASCIIStringEncoding]];
     [pool release];
 }
 
@@ -68,6 +77,7 @@ GMDWindow openWindow() {
     [gw initWithWindowNibPath:[url path] owner:gw];
     [[gw window] orderFront:nil];
     [[gw eventWindow] setGw:gw];
+    
     
     [pool release];
     

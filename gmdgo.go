@@ -1,3 +1,19 @@
+/*
+   Copyright 2012 John Asmuth
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
 package gmd
 
 // #cgo darwin LDFLAGS: -framework gomacdraw
@@ -6,31 +22,20 @@ package gmd
 import "C"
 
 import (
+	"errors"
 	"fmt"
 	"image/draw"
-	"errors"
-	"unsafe"
+
 	"runtime"
+	"unsafe"
 )
 
 var appChanStart = make(chan bool)
 var appChanFinish = make(chan bool)
 
-const DoItTheRightWay = false
-
 func init() {
-	if DoItTheRightWay {
-		runtime.LockOSThread()
-	}
+	runtime.LockOSThread()
 	C.initMacDraw()
-	if !DoItTheRightWay {
-		go func() {
-			runtime.LockOSThread()
-			<-appChanStart
-			C.NSAppRun()
-			appChanFinish <- true
-		}()
-	}
 }
 
 func SetAppName(name string) {
@@ -40,15 +45,15 @@ func SetAppName(name string) {
 }
 
 type Window struct {
-	cw _Ctypedef_GMDWindow
+	cw C.GMDWindow
 	im *Image
 	ec chan interface{}
 }
 
 func NewWindow() (w *Window) {
 	cw := C.openWindow()
-	w = &Window {
-		cw : cw,
+	w = &Window{
+		cw: cw,
 	}
 	return
 }
@@ -78,15 +83,15 @@ func (w *Window) Show() {
 func (w *Window) Screen() (im draw.Image) {
 	width, height := w.Size()
 	ci := C.getWindowScreen(w.cw)
-	gim := &Image {
-		width : width,
-		height : height,
-		data : make([]byte, 4*width*height),
-		ci : ci,
+	gim := &Image{
+		width:  width,
+		height: height,
+		data:   make([]byte, 4*width*height),
+		ci:     ci,
 	}
-	
+
 	ptr := unsafe.Pointer(&gim.data[0])
-	
+
 	C.setScreenData(ci, ptr)
 	w.im = gim
 	im = gim
@@ -106,13 +111,7 @@ func (w *Window) Close() (err error) {
 }
 
 func Run() {
-	if DoItTheRightWay {
-		C.NSAppRun()
-	} else {
-		appChanStart <- true
-		//C.NSAppRun()
-		<-appChanFinish
-	}
+	C.NSAppRun()
 }
 
 func Stop() {

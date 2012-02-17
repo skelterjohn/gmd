@@ -12,10 +12,12 @@
 @interface GoMenu : NSObject {
 @private
     NSMenu* menu;
+    NSString* appName;
 }
 
 @property (assign) IBOutlet NSMenu* menu;
 
 - (void)setAppName:(NSString*)name;
+- (void)loadNoNib;
 
 @end

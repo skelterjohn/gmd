@@ -12,7 +12,7 @@ import (
 type Image struct {
 	width, height int
 	data          []uint8
-	ci            _Ctypedef_GMDImage
+	ci            C.GMDImage
 }
 
 func (i *Image) At(x, y int) (c color.Color) {

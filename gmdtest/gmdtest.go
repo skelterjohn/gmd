@@ -1,16 +1,36 @@
+/*
+   Copyright 2012 John Asmuth
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
 package main
 
 import (
-	"exp/gui"
 	"github.com/skelterjohn/gmd"
+	"github.com/skelterjohn/go.wde"
 	"image/color"
 	"image/draw"
 	"time"
+	"runtime"
 )
 
 func main() {
+	if false {
+		runtime.LockOSThread()
+	}
 
-	var dw gui.Window
+	var dw wde.Window
 
 	gmd.SetAppName("gmd")
 
@@ -26,32 +46,37 @@ func main() {
 
 		var s draw.Image = dw.Screen()
 
+		done := make(chan bool)
+
 		go func() {
 			for ei := range events {
 				switch e := ei.(type) {
-				case gmd.MouseDownEvent:
+				case wde.MouseDownEvent:
 					println("md", e.X, e.Y, e.Button)
-				case gmd.MouseUpEvent:
+					dw.Close()
+				case wde.MouseUpEvent:
 					println("mu", e.X, e.Y, e.Button)
-				case gmd.MouseMovedEvent:
+				case wde.MouseMovedEvent:
 					println("mv", e.X, e.Y)
-				case gmd.MouseDraggedEvent:
+				case wde.MouseDraggedEvent:
 					println("mdr", e.X, e.Y, e.Button)
-				case gmd.MouseEnteredEvent:
+				case wde.MouseEnteredEvent:
 					println("men", e.X, e.Y)
-				case gmd.MouseExitedEvent:
+				case wde.MouseExitedEvent:
 					println("mex", e.X, e.Y)
-				case gmd.KeyDownEvent:
+				case wde.KeyDownEvent:
 					println("kd", e.Letter)
-				case gmd.KeyUpEvent:
+				case wde.KeyUpEvent:
 					println("ku", e.Letter)
-				case gmd.CloseEvent:
+				case wde.CloseEvent:
 					println("close")
-				case gmd.ResizeEvent:
+				case wde.ResizeEvent:
 					println("resize")
 					s = dw.Screen()
 				}
 			}
+			println("end of events")
+			done <- true
 		}()
 
 		for i := 0; ; i++ {
@@ -89,7 +114,11 @@ func main() {
 				}
 			}
 			dw.FlushImage()
-			<-time.After(1e9)
+			select {
+			case <-time.After(1e9):
+			case <-done:
+				return
+			}
 		}
 	}
 	go x()

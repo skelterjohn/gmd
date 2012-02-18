@@ -36,9 +36,9 @@ func (w *Window) EventChan() (events <-chan interface{}) {
 	downKeys := make(map[int]bool)
 	ec := make(chan interface{})
 	go func(ec chan<- interface{}) {
+		eventloop:
 		for {
 			e := C.getNextEvent(w.cw)
-			var ei interface{}
 			switch e.kind {
 			case C.GMDNoop:
 				continue
@@ -47,64 +47,61 @@ func (w *Window) EventChan() (events <-chan interface{}) {
 				mde.X = int(e.data[0])
 				mde.Y = int(e.data[1])
 				mde.Which = getButton(int(e.data[2]))
-				ei = mde
+				ec <- mde
 			case C.GMDMouseUp:
 				var mue wde.MouseUpEvent
 				mue.X = int(e.data[0])
 				mue.Y = int(e.data[1])
 				mue.Which = getButton(int(e.data[2]))
-				ei = mue
+				ec <- mue
 			case C.GMDMouseDragged:
 				var mde wde.MouseDraggedEvent
 				mde.X = int(e.data[0])
 				mde.Y = int(e.data[1])
 				mde.Which = getButton(int(e.data[2]))
-				ei = mde
+				ec <- mde
 			case C.GMDMouseMoved:
 				var me wde.MouseMovedEvent
 				me.X = int(e.data[0])
 				me.Y = int(e.data[1])
-				ei = me
+				ec <- me
 			case C.GMDMouseEntered:
 				var me wde.MouseEnteredEvent
 				me.X = int(e.data[0])
 				me.Y = int(e.data[1])
-				ei = me
+				ec <- me
 			case C.GMDMouseExited:
 				var me wde.MouseExitedEvent
 				me.X = int(e.data[0])
 				me.Y = int(e.data[1])
-				ei = me
+				ec <- me
 			case C.GMDKeyDown:
 				var ke wde.KeyEvent
 				ke.Letter = fmt.Sprintf("%c", e.data[0])
 				ke.Code = int(e.data[1])
-				ei = wde.KeyTypedEvent(ke)
 				if !downKeys[ke.Code] {	
 					ec <- wde.KeyDownEvent(ke)
 				}
+				ec <- wde.KeyTypedEvent(ke)
 				downKeys[ke.Code] = true
 			case C.GMDKeyUp:
 				var ke wde.KeyUpEvent
 				ke.Letter = fmt.Sprintf("%c", e.data[0])
 				ke.Code = int(e.data[1])
-				ei = ke
+				ec <- ke
 				downKeys[ke.Code] = false
 			case C.GMDResize:
 				var re wde.ResizeEvent
 				re.Width = int(e.data[0])
 				re.Height = int(e.data[1])
-				ei = re
+				ec <- re
 			case C.GMDClose:
-				ei = wde.CloseEvent{}
-				ec <- ei
-				close(ec)
+				ec <- wde.CloseEvent{}
+				break eventloop
 				return
 			}
-			select {
-			case ec <- ei:
-			}
 		}
+		close(ec)
 	}(ec)
 	events = ec
 	return

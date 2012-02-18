@@ -21,7 +21,6 @@ enum GMDEventCodes {
     GMDMouseExited = 6,
     GMDKeyDown = 7,
     GMDKeyUp = 8,
-    //GMDKeyPress = 9,
     GMDResize = 10,
     GMDClose = 11,
 };

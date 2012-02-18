@@ -129,13 +129,11 @@ void getWindowSize(GMDWindow gmdw, int* width, int* height) {
 }
 
 GMDEvent getNextEvent(GMDWindow gmdw) {
-    NSLog(@"+getNextEvent()");
     NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
     GoWindow* gw = (GoWindow*)gmdw;
     EventWindow* ew = (EventWindow*)[gw window];
     GMDEvent e = [ew dq];
     [pool release];
-    NSLog(@"-getNextEvent()");
     return e;
 }
 

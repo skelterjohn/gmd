@@ -38,7 +38,6 @@
 
 - (void)nq:(GMDEvent)e
 {
-    NSLog(@"nqing event");
     [lock lock];
     
     EventHolder* eh = [[[EventHolder alloc] initWithEvent:e] autorelease];
@@ -49,13 +48,10 @@
     } else {
         [lock unlockWithCondition:1];
     }
-    
-    NSLog(@"nqed event");
 }
 
 - (GMDEvent)dq
 {
-    NSLog(@"dqing event");
     [lock lockWhenCondition:1];
     
     EventHolder* eh = [eventQ objectAtIndex:0];
@@ -67,7 +63,6 @@
     } else {
         [lock unlockWithCondition:1];
     }
-    NSLog(@"dqed event");
     
     return e;
 }

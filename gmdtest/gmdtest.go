@@ -21,26 +21,20 @@ import (
 	"github.com/skelterjohn/go.wde"
 	"image/color"
 	"image/draw"
+	"sync"
 	"time"
-	"runtime"
 )
 
 func main() {
-	if false {
-		runtime.LockOSThread()
-	}
-
-	var dw wde.Window
-
 	gmd.SetAppName("gmd")
 
-	x := func() {
-		w := gmd.NewWindow()
-		w.SetTitle("hi!")
-		w.SetSize(100, 100)
-		w.Show()
+	var wg sync.WaitGroup
 
-		dw = w
+	x := func() {
+		dw := gmd.NewWindow()
+		dw.SetTitle("hi!")
+		dw.SetSize(100, 100)
+		dw.Show()
 
 		events := dw.EventChan()
 
@@ -52,14 +46,14 @@ func main() {
 			for ei := range events {
 				switch e := ei.(type) {
 				case wde.MouseDownEvent:
-					println("md", e.X, e.Y, e.Button)
+					println("md", e.X, e.Y, e.Which)
 					dw.Close()
 				case wde.MouseUpEvent:
-					println("mu", e.X, e.Y, e.Button)
+					println("mu", e.X, e.Y, e.Which)
 				case wde.MouseMovedEvent:
 					println("mv", e.X, e.Y)
 				case wde.MouseDraggedEvent:
-					println("mdr", e.X, e.Y, e.Button)
+					println("mdr", e.X, e.Y, e.Which)
 				case wde.MouseEnteredEvent:
 					println("men", e.X, e.Y)
 				case wde.MouseExitedEvent:
@@ -68,6 +62,8 @@ func main() {
 					println("kd", e.Letter)
 				case wde.KeyUpEvent:
 					println("ku", e.Letter)
+				case wde.KeyTypedEvent:
+					println("kt", e.Letter)
 				case wde.CloseEvent:
 					println("close")
 				case wde.ResizeEvent:
@@ -117,11 +113,21 @@ func main() {
 			select {
 			case <-time.After(1e9):
 			case <-done:
+				wg.Done()
 				return
 			}
 		}
 	}
+	wg.Add(1)
 	go x()
+	wg.Add(1)
+	go x()
+
+	go func() {
+		wg.Wait()
+		gmd.Stop()
+	}()
+
 	gmd.Run()
 	println("done")
 }

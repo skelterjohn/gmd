@@ -24,13 +24,20 @@ import (
 	"github.com/skelterjohn/go.wde"
 )
 
+func getButton(b int) (which wde.Button) {
+	switch b {
+	case 0:
+		which = wde.LeftButton
+	}
+	return
+}
+
 func (w *Window) EventChan() (events <-chan interface{}) {
+	downKeys := make(map[int]bool)
 	ec := make(chan interface{})
 	go func(ec chan<- interface{}) {
 		for {
-			println("polling event")
 			e := C.getNextEvent(w.cw)
-			println("got event")
 			var ei interface{}
 			switch e.kind {
 			case C.GMDNoop:
@@ -39,20 +46,20 @@ func (w *Window) EventChan() (events <-chan interface{}) {
 				var mde wde.MouseDownEvent
 				mde.X = int(e.data[0])
 				mde.Y = int(e.data[1])
-				mde.Button = int(e.data[2])
+				mde.Which = getButton(int(e.data[2]))
 				ei = mde
 			case C.GMDMouseUp:
 				var mue wde.MouseUpEvent
 				mue.X = int(e.data[0])
 				mue.Y = int(e.data[1])
-				mue.Button = int(e.data[2])
+				mue.Which = getButton(int(e.data[2]))
 				ei = mue
 			case C.GMDMouseDragged:
-				var mue wde.MouseDraggedEvent
-				mue.X = int(e.data[0])
-				mue.Y = int(e.data[1])
-				mue.Button = int(e.data[2])
-				ei = mue
+				var mde wde.MouseDraggedEvent
+				mde.X = int(e.data[0])
+				mde.Y = int(e.data[1])
+				mde.Which = getButton(int(e.data[2]))
+				ei = mde
 			case C.GMDMouseMoved:
 				var me wde.MouseMovedEvent
 				me.X = int(e.data[0])
@@ -69,15 +76,20 @@ func (w *Window) EventChan() (events <-chan interface{}) {
 				me.Y = int(e.data[1])
 				ei = me
 			case C.GMDKeyDown:
-				var ke wde.KeyDownEvent
+				var ke wde.KeyEvent
 				ke.Letter = fmt.Sprintf("%c", e.data[0])
 				ke.Code = int(e.data[1])
-				ei = ke
+				ei = wde.KeyTypedEvent(ke)
+				if !downKeys[ke.Code] {	
+					ec <- wde.KeyDownEvent(ke)
+				}
+				downKeys[ke.Code] = true
 			case C.GMDKeyUp:
 				var ke wde.KeyUpEvent
 				ke.Letter = fmt.Sprintf("%c", e.data[0])
 				ke.Code = int(e.data[1])
 				ei = ke
+				downKeys[ke.Code] = false
 			case C.GMDResize:
 				var re wde.ResizeEvent
 				re.Width = int(e.data[0])

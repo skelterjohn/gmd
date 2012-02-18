@@ -50,7 +50,7 @@ type Window struct {
 	ec chan interface{}
 }
 
-func NewWindow() (w *Window) {
+func NewWindow() (w *Window, err error) {
 	cw := C.openWindow()
 	w = &Window{
 		cw: cw,

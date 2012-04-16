@@ -44,36 +44,36 @@ func (w *Window) EventChan() (events <-chan interface{}) {
 				continue
 			case C.GMDMouseDown:
 				var mde wde.MouseDownEvent
-				mde.X = int(e.data[0])
-				mde.Y = int(e.data[1])
+				mde.Where.X = int(e.data[0])
+				mde.Where.Y = int(e.data[1])
 				mde.Which = getButton(int(e.data[2]))
 				ec <- mde
 			case C.GMDMouseUp:
 				var mue wde.MouseUpEvent
-				mue.X = int(e.data[0])
-				mue.Y = int(e.data[1])
+				mue.Where.X = int(e.data[0])
+				mue.Where.Y = int(e.data[1])
 				mue.Which = getButton(int(e.data[2]))
 				ec <- mue
 			case C.GMDMouseDragged:
 				var mde wde.MouseDraggedEvent
-				mde.X = int(e.data[0])
-				mde.Y = int(e.data[1])
+				mde.Where.X = int(e.data[0])
+				mde.Where.Y = int(e.data[1])
 				mde.Which = getButton(int(e.data[2]))
 				ec <- mde
 			case C.GMDMouseMoved:
 				var me wde.MouseMovedEvent
-				me.X = int(e.data[0])
-				me.Y = int(e.data[1])
+				me.Where.X = int(e.data[0])
+				me.Where.Y = int(e.data[1])
 				ec <- me
 			case C.GMDMouseEntered:
 				var me wde.MouseEnteredEvent
-				me.X = int(e.data[0])
-				me.Y = int(e.data[1])
+				me.Where.X = int(e.data[0])
+				me.Where.Y = int(e.data[1])
 				ec <- me
 			case C.GMDMouseExited:
 				var me wde.MouseExitedEvent
-				me.X = int(e.data[0])
-				me.Y = int(e.data[1])
+				me.Where.X = int(e.data[0])
+				me.Where.Y = int(e.data[1])
 				ec <- me
 			case C.GMDKeyDown:
 				var ke wde.KeyEvent

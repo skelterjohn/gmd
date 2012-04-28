@@ -156,7 +156,7 @@
     GMDEvent e;
     e.kind = GMDResize;
     e.data[0] = [self frame].size.width;
-    e.data[1] = [self frame].size.height;
+    e.data[1] = [self frame].size.height-22;
     [self nq:e];
     [gw newBuffer];
 }

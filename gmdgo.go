@@ -24,6 +24,8 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	"image"
+	"sync"
 	"image/draw"
 
 	"runtime"
@@ -46,7 +48,8 @@ func SetAppName(name string) {
 
 type Window struct {
 	cw C.GMDWindow
-	im *Image
+	im *image.RGBA
+	oplock sync.Mutex
 	ec chan interface{}
 }
 
@@ -59,50 +62,89 @@ func NewWindow() (w *Window, err error) {
 }
 
 func (w *Window) SetTitle(title string) {
+	w.oplock.Lock()
+	defer w.oplock.Unlock()
+
 	ctitle := C.CString(title)
 	defer C.free(unsafe.Pointer(ctitle))
 	C.setWindowTitle(w.cw, ctitle)
 }
 
 func (w *Window) SetSize(width, height int) {
+	w.oplock.Lock()
+	defer w.oplock.Unlock()
+
 	C.setWindowSize(w.cw, _Ctype_int(width), _Ctype_int(height))
 }
 
 func (w *Window) Size() (width, height int) {
+	w.oplock.Lock()
+	defer w.oplock.Unlock()
+
 	var rw, rh _Ctype_int
 	C.getWindowSize(w.cw, &rw, &rh)
 	width = int(rw)
-	height = int(rh)
+	height = int(rh)-22
 	return
 }
 
 func (w *Window) Show() {
+	w.oplock.Lock()
+	defer w.oplock.Unlock()
+
 	C.showWindow(w.cw)
+}
+
+func (w *Window) resizeBuffer(width, height int) (im draw.Image) {
+	w.oplock.Lock()
+	defer w.oplock.Unlock()
+
+	ci := C.getWindowScreen(w.cw)
+	
+	w.im = image.NewRGBA(image.Rectangle{
+		image.Point{},
+		image.Point{width, height},
+	})
+
+	ptr := unsafe.Pointer(&w.im.Pix[0])
+
+	C.setScreenData(ci, ptr)
+	
+	im = w.im
+	return
 }
 
 func (w *Window) Screen() (im draw.Image) {
 	width, height := w.Size()
-	ci := C.getWindowScreen(w.cw)
-	gim := &Image{
-		width:  width,
-		height: height,
-		data:   make([]byte, 4*width*height),
-		ci:     ci,
+	var imw, imh int
+	if w.im == nil {
+		goto newbuffer
 	}
 
-	ptr := unsafe.Pointer(&gim.data[0])
+	imw = w.im.Bounds().Max.X-w.im.Bounds().Min.X
+	imh = w.im.Bounds().Max.Y-w.im.Bounds().Min.Y
 
-	C.setScreenData(ci, ptr)
-	w.im = gim
-	im = gim
+	if imw == width && imh == height {
+		return w.im
+	}
+
+	newbuffer:
+	im = w.resizeBuffer(width, height)
+	
 	return
 }
 
 func (w *Window) FlushImage() {
+	w.oplock.Lock()
+	defer w.oplock.Unlock()
+
 	C.flushWindowScreen(w.cw)
 }
 
 func (w *Window) Close() (err error) {
+	w.oplock.Lock()
+	defer w.oplock.Unlock()
+
 	ecode := C.closeWindow(w.cw)
 	if ecode != 0 {
 		err = errors.New(fmt.Sprintf("error:%d", ecode))

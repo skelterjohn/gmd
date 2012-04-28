@@ -57,7 +57,7 @@
 - (ImageBuffer*)newBuffer
 {
     CGSize bufsize = [self size];
-    bufsize.height -= 22;
+    //bufsize.height -= 22;
     buffer = [[ImageBuffer alloc] initWithSize:bufsize];
     [imageView setImage:nil];
     return buffer;
@@ -84,8 +84,8 @@
     
     CGRect frame = [[self window] frame];
     frame.size = wsize;
-    frame.size.height -= 22;
-    frame.origin = CGPointMake(0, 0);
+//    frame.size.height -= 22;
+    frame.origin = CGPointMake(0, -22);
     
     //NSLog(@"%d %d", (int)frame.size.width, (int)frame.size.height);
     
